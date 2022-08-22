@@ -10,7 +10,7 @@ exit_type="Attention"
 exit_epoch=19
 trial="attention"
 # --run_server \
-python train.py \
+python optimizer.py \
     --experiment "Place" \
     --num_classes ${XD} \
     --fine_tune 0 \

@@ -10,7 +10,7 @@ experiment="Cifar100"
 # --search_cache_models \
 # --exit_on_all_resolved \
     # --count_flops \
-python train.py \
+python optimizer.py \
     --experiment "${experiment}" \
     --num_classes ${XD} \
     --shrink \

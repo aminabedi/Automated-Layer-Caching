@@ -12,7 +12,7 @@ trial="20-flops"
 experiment="Face"
 # --run_server \
 # --search_cache_models \
-python train.py \
+python optimizer.py \
     --experiment "${experiment}" \
     --shrink \
     --num_classes ${XD} \

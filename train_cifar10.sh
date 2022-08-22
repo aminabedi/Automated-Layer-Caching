@@ -12,7 +12,7 @@ experiment="Cifar10"
 
     # --run_meters \
     # --count_flops \
-python train.py \
+python optimizer.py \
     --run_profiler \
     --experiment "${experiment}" \
     --shrink \

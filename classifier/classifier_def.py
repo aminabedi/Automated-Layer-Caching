@@ -12,6 +12,7 @@ sys.path.append('../../')
 from classifier.Dense2Layer import Dense2Layer, Dense2LayerSoftmax, Dense2LayerTemp, DenseEmbed
 from classifier.ConvDense import ConvDense, Conv2Dense
 from classifier.attention import Attention
+from classifier.NConvMDense import NConvMDense
 
 class ClassifierFactory:
     """Factory to produce classifier according the classifier_conf.yaml.
@@ -27,7 +28,9 @@ class ClassifierFactory:
             self.classifier_param = classifier_conf[experiment][backbone][classifier_id]
 
     def get_classifier(self):
-        if self.classifier_type == 'Dense2LayerSoftmax':
+        if self.classifier_type == "NConvMDense":
+            classifer = NConvMDense(self.classifier_param)
+        elif self.classifier_type == 'Dense2LayerSoftmax':
             feat_dim = self.classifier_param['feat_dim'] # dimension of the input features, e.g. 512.
             n_l1 = self.classifier_param['n_l1'] # height of the feature map before the final features.
             n_l2 = self.classifier_param['n_l2'] # width of the feature map before the final features.
