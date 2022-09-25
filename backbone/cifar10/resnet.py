@@ -275,7 +275,7 @@ class ResNet(nn.Module):
         x = self.fc(x)
         return x
 
-    def forward(self, x, args=None, cache=False, return_vectors=False, threshold = None, training=False, logger=None, return_cc=False):
+    def forward(self, x, args=None, cache=False, return_vectors=False, threshold = None, training=False, logger=None, return_cc=True):
         args = args or self.defaults["args"]
         cache = cache or self.defaults["cache"]
         threshold = threshold or self.defaults["threshold"]
@@ -283,7 +283,7 @@ class ResNet(nn.Module):
         if args:
             cc = CacheControl(args, x.shape, threshold, getattr(self, 'cache_exits', []), training, logger = logger)
         if cache and (not hasattr(self, 'cache_exits') or len(self.cache_exits) < len(self.cached_layers)):
-            raise Exception("Cannot cache until all cache models are set")
+            raise Exception("Cannot perform caching before all cache models are set")
         # print("NEW BATCH", return_cc)
         for i in range(len(self.layers)):
             if self.layers[i] == "flatten":

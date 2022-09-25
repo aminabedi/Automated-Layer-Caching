@@ -1,8 +1,8 @@
 mkdir "log"
 XD=10
 BS=16
-backbone="Resnet50"
-exit_type="Dense2LayerTemp"
+backbone="Resnet18"
+exit_type="NConvMDense"
 exit_epoch=19
 trial="70-flops-details"
 experiment="Cifar10"
@@ -13,15 +13,16 @@ experiment="Cifar10"
     # --run_meters \
     # --count_flops \
 python optimizer.py \
+    --pre_evaluate_backbone \
     --run_profiler \
     --experiment "${experiment}" \
     --shrink \
     --num_classes ${XD} \
     --fine_tune 0 \
     --trial "${trial}" \
-    --train_epochs 0 \
-    --train_device "cuda:0" \
-    --test_device "cuda:0" \
+    --train_epochs 10 \
+    --train_device "cpu" \
+    --test_device "cpu" \
     --exit_model_path "./out_dir/${experiment}/${backbone}/exits/${exit_type}/" \
     --data_root "./data/cifar10" \
     --backbone_type "${backbone}" \

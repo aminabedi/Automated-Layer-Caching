@@ -22,14 +22,16 @@ class ClassifierFactory:
         classifier_param(dict):  parsed params and it's value. 
     """
     def __init__(self, classifier_id, classifier_conf_file, experiment, backbone):
+        print("Classifier_id", classifier_id)
         self.classifier_type = classifier_id.split('_')[0]
         with open(classifier_conf_file) as f:
             classifier_conf = yaml.load(f, Loader=yaml.FullLoader)
             self.classifier_param = classifier_conf[experiment][backbone][classifier_id]
 
     def get_classifier(self):
+        print("FETCHING:", self.classifier_type)
         if self.classifier_type == "NConvMDense":
-            classifer = NConvMDense(self.classifier_param)
+            classifier= NConvMDense(self.classifier_param)
         elif self.classifier_type == 'Dense2LayerSoftmax':
             feat_dim = self.classifier_param['feat_dim'] # dimension of the input features, e.g. 512.
             n_l1 = self.classifier_param['n_l1'] # height of the feature map before the final features.

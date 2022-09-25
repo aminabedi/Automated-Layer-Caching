@@ -17,8 +17,8 @@ class CacheControl():
         self.conf = conf
         self.ret = torch.ones((input_shape[0], conf.num_classes)).to(device) * -1
         self.start_time = time.time()
-        self.starter = torch.cuda.Event(enable_timing=True)
-        self.ender = torch.cuda.Event(enable_timing=True)
+        # self.starter = torch.cuda.Event(enable_timing=True)
+        # self.ender = torch.cuda.Event(enable_timing=True)
         self.hit_times= [0 for i in range(self.num_exits)]
         self.hits= [torch.ones(0) for i in range(self.num_exits)]
         self.idxs= [torch.arange(input_shape[0]).to(device)]
@@ -27,7 +27,7 @@ class CacheControl():
         self.item_exits = torch.ones(input_shape[0]).to(device) * -1
         self.exit_idx = 0
         self.cuda_time = 0
-        self.starter.record()
+        # self.starter.record()
 
     def all_resolved(self):
         if not self.exit_idx:
@@ -38,10 +38,10 @@ class CacheControl():
         return x.sum().item() == self.input_shape[0]
     def record_timing(self):
         self.end_time = time.time()  
-        self.ender.record()
+        # self.ender.record()
         # WAIT FOR GPU SYNC
-        torch.cuda.synchronize()
-        self.cuda_time = self.starter.elapsed_time(self.ender)
+        # torch.cuda.synchronize()
+        # self.cuda_time = self.starter.elapsed_time(self.ender)
 
     def exit(self, out, final=False):
         current_idxs = self.idxs[-1]

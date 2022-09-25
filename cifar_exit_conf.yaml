@@ -17,15 +17,34 @@ Cifar10:
             feat_dim: 4096
             n_l1: 256
             n_l2: 10
-        exit_3:
+        NConvMDense_exit_3:
             convs:
-                - in_ch: 128
-                  out_ch: 64
+                - out_ch: 64
                   k: 3
                   s: 1
             linears:
-                - in: 16384
-                - out: 100
+                - out: 10
+        NConvMDense_exit_4:
+            convs:
+                - out_ch: 64
+                  k: 3
+                  s: 1
+            linears:
+                - out: 10
+        NConvMDense_exit_5:
+            convs:
+                - out_ch: 64
+                  k: 3
+                  s: 1
+            linears:
+                - out: 10
+        NConvMDense_exit_6:
+            convs:
+                - out_ch: 64
+                  k: 3
+                  s: 1
+            linears:
+                - out: 10
 
     Resnet50:
         Dense2LayerTemp_exit_3:
