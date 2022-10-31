@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-import os
-from backbone.CacheControl import CacheControl
+from aux import Bottleneck, BasicBlock, conv1x1
+from modules import CachableModule
+
 __all__ = [
     "ResNet",
     "resnet18",
@@ -9,132 +10,11 @@ __all__ = [
     "resnet50",
 ]
 
-
-def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
-    """3x3 convolution with padding"""
-    return nn.Conv2d(
-        in_planes,
-        out_planes,
-        kernel_size=3,
-        stride=stride,
-        padding=dilation,
-        groups=groups,
-        bias=False,
-        dilation=dilation,
-    )
-
-
-def conv1x1(in_planes, out_planes, stride=1):
-    """1x1 convolution"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
-
-
-class BasicBlock(nn.Module):
-    expansion = 1
-
+class ResNet(CachableModule):
     def __init__(
         self,
-        inplanes,
-        planes,
-        stride=1,
-        downsample=None,
-        groups=1,
-        base_width=64,
-        dilation=1,
-        norm_layer=None,
-    ):
-        super(BasicBlock, self).__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-        if groups != 1 or base_width != 64:
-            raise ValueError("BasicBlock only supports groups=1 and base_width=64")
-        if dilation > 1:
-            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
-        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = norm_layer(planes)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes)
-        self.bn2 = norm_layer(planes)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
-
-
-class Bottleneck(nn.Module):
-    expansion = 4
-
-    def __init__(
-        self,
-        inplanes,
-        planes,
-        stride=1,
-        downsample=None,
-        groups=1,
-        base_width=64,
-        dilation=1,
-        norm_layer=None,
-    ):
-        super(Bottleneck, self).__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-        width = int(planes * (base_width / 64.0)) * groups
-        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = norm_layer(width)
-        self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        self.bn2 = norm_layer(width)
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
-
-
-class ResNet(nn.Module):
-    def __init__(
-        self,
-        block,
-        layers,
+        block = Bottleneck, 
+        layers = [3, 4, 6, 3],
         num_classes=10,
         zero_init_residual=False,
         groups=1,
@@ -199,7 +79,6 @@ class ResNet(nn.Module):
                     nn.init.constant_(m.bn3.weight, 0)
                 elif isinstance(m, BasicBlock):
                     nn.init.constant_(m.bn2.weight, 0)
-        self.cached_layers = [3, 4, 5, 6] #range(len(self.layers))
         self.log_softmax = nn.LogSoftmax(dim = 1)
         self.layers = [
             self.conv1,
@@ -216,7 +95,6 @@ class ResNet(nn.Module):
             self.log_softmax
         ]
         self.cache_exits = []
-        self.reset_defaults()
           
     def _make_layer(self, block, planes, blocks, stride=1, dilate=False):
         norm_layer = self._norm_layer
@@ -259,180 +137,17 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _forward(self, x, args=None, cache=False, return_vectors=False, threshold = 1, training=False, logger=None):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
-
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-
-        x = self.avgpool(x)
-        x = x.reshape(x.size(0), -1)
-        x = self.fc(x)
-        return x
-
-    def forward(self, x, args=None, cache=False, return_vectors=False, threshold = None, training=False, logger=None, return_cc=True):
-        args = args or self.defaults["args"]
-        cache = cache or self.defaults["cache"]
-        threshold = threshold or self.defaults["threshold"]
-        return_cc = return_cc or self.defaults["return_cc"]
-        if args:
-            cc = CacheControl(args, x.shape, threshold, getattr(self, 'cache_exits', []), training, logger = logger)
-        if cache and (not hasattr(self, 'cache_exits') or len(self.cache_exits) < len(self.cached_layers)):
-            raise Exception("Cannot perform caching before all cache models are set")
-        # print("NEW BATCH", return_cc)
+    def _forward(self, x):
         for i in range(len(self.layers)):
+            print(i, type(x))
+            print(i, x.dim())
+            if not len(x):
+                break
             if self.layers[i] == "flatten":
-                try:
-                    out = torch.flatten(out, 1)
-                except Exception as e:
-                    print(out.shape)
-                    raise e
+                x = torch.flatten(x, 1)
             else:
-                out = self.layers[i](out if i else x)
-            
-            if args and i in self.cached_layers:
-                if return_vectors:
-                    # print("Hidden SHAPE appended", out.shape)
-                    cc.vectors.append(out)
-                if cache:
-                    if logger:
-                        logger.info("CHECKING CACHE")
-                    # print("Hidden SHAPE", out.shape)
-                    out, should_exit = cc.exit(out)
-                    if should_exit:
-                        # cc.exit(out, final=True, remaining_exits = len(self.cached_layers) - i)
-                        return out, cc if return_cc else None
-            
-
-        if args:
-            cc.exit(out, final=True)
-            return out, cc if return_cc else None
-        else:
-            return out
-
-    def set_exit_models(self, models):
-        self.cache_exits = nn.ModuleList(models)
-    def set_defaults(self, args, cache, threshold, return_cc):
-        self.defaults = {
-            "args": args,
-            "cache": cache,
-            "threshold": threshold,
-            "return_cc": return_cc
-        }
-    def reset_defaults(self):
-        self.defaults = {
-            "args": None,
-            "cache": False,
-            "threshold": 1,
-            "return_cc": False
-        }
-
-
-
-def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):
-    model = ResNet(block, layers, **kwargs)
-    if pretrained:
-        script_dir = os.path.dirname(__file__)
-        state_dict = torch.load(
-            script_dir + "/state_dicts/" + arch + ".pt", map_location=device
-        )
-        model.load_state_dict(state_dict)
-    return model
-
-
-def resnet18(pretrained=False, progress=True, device="cpu", **kwargs):
-    """Constructs a ResNet-18 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return _resnet(
-        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, device, **kwargs
-    )
-
-
-def resnet34(pretrained=False, progress=True, device="cpu", **kwargs):
-    """Constructs a ResNet-34 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return _resnet(
-        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, device, **kwargs
-    )
-
-
-def resnet50(pretrained=False, progress=True, device="cpu", **kwargs):
-    """Constructs a ResNet-50 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return _resnet(
-        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, device, **kwargs
-    )
-
-#####################
-
-def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
-
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-
-        x = self.avgpool(x)
-        x = x.reshape(x.size(0), -1)
-        x = self.fc(x)
+                x = self.layers[i](x)
+                x = self.cache_control.exit(x, layer_id = i)
         return x
 
 
-def forward(self, x, args, cache_enabled=False, record_activations=False, training=False):
-    cc = CacheControl(args, x.shape, cache_enabled, return_vectors, training, self.cache_models)
-    x = self.conv1(x)
-    x = self.bn1(x)
-    x = self.relu(x)
-    x = self.maxpool(x)
-    x, should_exit = cc.exit(out)
-    if should_exit:
-        return cc.outputs, cc
-    x = self.layer1(x)
-    x, should_exit = cc.exit(out)
-    if should_exit:
-        return cc.outputs, cc
-    x = self.layer2(x)
-    x, should_exit = cc.exit(out)
-    if should_exit:
-        return cc.outputs, cc
-    x = self.layer3(x)
-    x, should_exit = cc.exit(out)
-    if should_exit:
-        return cc.outputs, cc
-    x = self.layer4(x)
-
-    x = self.avgpool(x)
-    x = x.reshape(x.size(0), -1)
-    x = self.fc(x)
-    return x, cc
-
-
-    def forward(self, x, args=None, cache=False, return_vectors=False, training=False):
-        cc = CacheControl(args, x.shape, threshold, self.cache_models, training)
-        for layer in self.layers:
-            x = layer(x)
-            if i in self.cached_layers:
-                x, should_exit = cc.exit(x)
-                if should_exit:
-                    cc.exit(x, final=True)
-                    return cc.ret, cc.report()
-        cc.exit(x, final=True)
-        return cc.ret, cc.report() # Returns the full array of predictions (same size as the input) along with the reports in the cache controld

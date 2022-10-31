@@ -1,3 +1,4 @@
+#Obsolete
 from fastapi import FastAPI, WebSocket
 import uvicorn
 import torch

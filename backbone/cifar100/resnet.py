@@ -10,7 +10,7 @@
 
 import torch
 import torch.nn as nn
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 
 class BasicBlock(nn.Module):
     """Basic Block for resnet 18 and resnet 34

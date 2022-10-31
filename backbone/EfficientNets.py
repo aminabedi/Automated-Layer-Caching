@@ -16,7 +16,7 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils import model_zoo
 from torch.nn import Sequential, BatchNorm1d, BatchNorm2d, Dropout, Module, Linear, ModuleList
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 import time
 
 

@@ -8,7 +8,7 @@
 # https://github.com/TreB1eN/InsightFace_Pytorch/blob/master/model.py
 
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, Sequential, Module, ModuleList
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 import torch
 import time
 class Flatten(Module):

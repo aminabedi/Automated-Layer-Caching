@@ -3,7 +3,7 @@ import torch.nn as nn
 import os
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, Sequential, Module, ModuleList, LogSoftmax, Softmax
 from PIL import Image
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 import time
 
 import pathlib

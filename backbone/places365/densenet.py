@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.nn import ModuleList
 from torch.jit.annotations import List
 import time
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
 model_urls = {

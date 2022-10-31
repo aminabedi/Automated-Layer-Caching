@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import os
 import pathlib
-from backbone.CacheControl import CacheControl
+from backbone.cache_control import CacheControl
 import time
 
 # from .utils import load_state_dict_from_url
