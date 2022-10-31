@@ -3,7 +3,6 @@ import torch.nn as nn
 import confuse
 from NConvMDense import NConvMDense
 from typing import List, Tuple
-import logging
 
 
 
@@ -90,7 +89,6 @@ class CacheControl():
                     out.size(0)).to(self.conf.device)
             return out
         cache_pred = self.cache_models[self.exit_idx](out)
-        print(self.exits, "Exit_idx", self.exit_idx)
         hits, mx = threshold_confidence(cache_pred, self.exits[layer_id]["threshold"])
         if self.logger:
             self.logger.info(f"Max cache conf: {mx}")

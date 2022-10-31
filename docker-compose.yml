@@ -1,10 +1,16 @@
 version: '3.5'
 services:
   torchserve:
-    build: .
+    build: 
+      context: .
+      args:
+        MODEL_NAME: cifar10-resnet50
+        MODEL_FILE: backbone/cifar10/resnet.py
+        MODEL_WEIGHTS: models/cifar10/resnet50.pt
+        CONFIG_FILE: backbone/cifar10/config.yaml
+        EXTRA_FILES: backbone/cifar10/aux.py
     ports:
      - "0.0.0.0:8080:8080"
      - "0.0.0.0:8081:8081"
-    command: torchserve --start --model-store model_store --models cifar10-resnet50=cifar10-resnet50.mar --ts-config properties/config.properties
     # volumes:
     #  - ./app:/app

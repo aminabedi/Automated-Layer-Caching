@@ -139,8 +139,6 @@ class ResNet(CachableModule):
 
     def _forward(self, x):
         for i in range(len(self.layers)):
-            print(i, type(x))
-            print(i, x.dim())
             if not len(x):
                 break
             if self.layers[i] == "flatten":
