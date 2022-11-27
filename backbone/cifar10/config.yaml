@@ -19,7 +19,7 @@ training:
   momentum: 0.9 
 exits:
   3:
-    weights_file: "exit_3.pt"
+    weights_file: null
     threshold: 0.5
     architecture:
       convs:
@@ -29,7 +29,7 @@ exits:
       linears:
         - out: 10
   4:
-    weights_file: "exit_4.pt"
+    weights_file: null
     threshold: 0.5
     architecture:
       convs:
@@ -39,7 +39,7 @@ exits:
       linears:
         - out: 10
   5:
-    weights_file: "exit_5.pt"
+    weights_file: null
     threshold: 0.5
     architecture:
       convs:
@@ -49,7 +49,7 @@ exits:
       linears:
         - out: 10
   6:
-    weights_file: "exit_6.pt"
+    weights_file: null
     threshold: 0.5
     architecture:
       convs:

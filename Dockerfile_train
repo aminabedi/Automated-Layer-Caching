@@ -1,0 +1,29 @@
+FROM python:3.10-slim
+
+ARG MODEL_NAME
+ARG MODEL_FILE
+ARG MODEL_WEIGHTS
+ARG CONFIG_FILE
+ARG EXTRA_FILES
+
+USER root
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN apt-get update -y && apt-get install -y curl
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+ENV MODEL_NAME ${MODEL_NAME}
+ENV MODEL_FILE ${MODEL_FILE}
+ENV MODEL_WEIGHTS ${MODEL_WEIGHTS}
+ENV CONFIG_FILE ${CONFIG_FILE}
+ENV EXTRA_FILES ${EXTRA_FILES}
+
+# RUN mkdir log && mkdir out_dir
+
+CMD 'cat optimizer.py'

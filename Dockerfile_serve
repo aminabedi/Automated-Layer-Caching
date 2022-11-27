@@ -8,16 +8,15 @@ ARG EXTRA_FILES
 
 USER root
 
-WORKDIR /app/caching
+WORKDIR /app
 
-COPY requirements.txt /app/caching
+COPY requirements.txt .
 
 RUN apt-get update -y && apt-get install -y curl
 
 RUN pip install -r requirements.txt
 
 COPY . .
-RUN echo $MODEL_NAME
 
 RUN mkdir model_store && \
     torch-model-archiver \

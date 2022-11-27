@@ -24,16 +24,16 @@ def train_one_epoch(data_loader, model, optimizer, criterion, cur_epoch, loss_me
     item_num = 0
     for batch_idx, (images, labels) in enumerate(data_loader):
         images = images.to(conf.train_device)
-        labels = labels.to(conf.train_device)
-        item_num+=labels.shape[0]
-        labels = labels.squeeze()
+        # labels = labels.to(conf.train_device)
+        # item_num+=labels.shape[0]
+        # labels = labels.squeeze()
         with torch.no_grad():
             outputs, results = model.forward(images, conf, return_vectors=True, logger= logger, training=True)
         vectors = results["vectors"]
         # for v in vectors:
         #     print("Hidden shape:", v.shape)
-        early_pred = exit_model(vectors[num_exit])
-        loss = criterion(early_pred, outputs) 
+        cache_pred = exit_model(vectors[num_exit])
+        loss = criterion(cache_pred, outputs) 
         # loss = criterion(early_pred, outputs, labels)
         optimizer.zero_grad()
         loss.backward()

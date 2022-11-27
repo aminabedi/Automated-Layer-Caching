@@ -137,15 +137,15 @@ class ResNet(CachableModule):
 
         return nn.Sequential(*layers)
 
-    def _forward(self, x):
+    def _forward(self, out):
         for i in range(len(self.layers)):
-            if not len(x):
+            if not len(out):
                 break
             if self.layers[i] == "flatten":
-                x = torch.flatten(x, 1)
+                out = torch.flatten(out, 1)
             else:
-                x = self.layers[i](x)
-                x = self.cache_control.exit(x, layer_id = i)
-        return x
+                out = self.layers[i](out)
+                out = self.cache_control.exit(out, layer_id = i)
+        return out
 
 

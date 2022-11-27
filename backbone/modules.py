@@ -5,7 +5,6 @@ from NConvMDense import NConvMDense
 from typing import List, Tuple
 
 
-
 class Config:
     def __init__(self, name="UnnamedConfig", config_file="config.yaml"):
         self.reader = confuse.Configuration(name)
@@ -22,26 +21,30 @@ class CachableModule(nn.Module):
     def __init__(self, *args, **kwargs):
         super(CachableModule, self).__init__(*args, **kwargs)
         self.exits = Config().reader["exits"].get(dict)
-        
+
     def forward(self, x):
         self.ensure_cache_init()
         self.cache_control.batch_received(x)
         x = self._forward(x)
         self.cache_control.exit(x, final=True)
         return self.cache_control.results
-    
+
     def ensure_cache_init(self):
         if not hasattr(self, 'cache_models'):
-            self.cache_models = nn.ModuleList([NConvMDense(e["architecture"]) for e in self.exits.values()]) # .load_state_dict(e["weights_file"])
+            self.cache_models = nn.ModuleList([NConvMDense(e["architecture"]).load_state_dict(e["weights_file"])
+                 if e["weights_file"] else NConvMDense(e["architecture"]) for e in self.exits.values()]) 
             self.cache_control = CacheControl(self.exits, self.cache_models)
 
 
-def threshold_confidence(x, threshold):
+def threshold_confidence(x, threshold): #[0.1, 0.2, ..., 0.9]
     x_exp = torch.exp(x)
     mx, _ = torch.max(x_exp, dim=1)
     return torch.gt(mx, threshold), mx
 
-
+# [0.1, 0.1, 0.1, 0.1, 0.6] => 0.6, 5
+# [0.2, 0.3, 0.4, 0.05, 0.05]=> 0.4
+#
+#
 class CacheControl():
     def __init__(self, exits: dict, cache_models: nn.ModuleList, logger=None):
         self.build_conf()
@@ -69,7 +72,7 @@ class CacheControl():
         self.vectors = []
         self.item_exits = torch.ones(batch.shape[0]).to(self.conf.device) * -1
 
-    def exit(self, out, layer_id=-1, final=False)-> Tuple[torch.Tensor, bool]:
+    def exit(self, out, layer_id=-1, final=False) -> torch.Tensor:
         if layer_id not in self.exits.keys() and not final:
             return out
         if self.conf.training and layer_id in self.exits.keys():
@@ -89,17 +92,18 @@ class CacheControl():
                     out.size(0)).to(self.conf.device)
             return out
         cache_pred = self.cache_models[self.exit_idx](out)
-        hits, mx = threshold_confidence(cache_pred, self.exits[layer_id]["threshold"])
+        hits, mx = threshold_confidence(
+            cache_pred, self.exits[layer_id]["threshold"])
         if self.logger:
             self.logger.info(f"Max cache conf: {mx}")
 
         self.outputs[self.exit_idx] = cache_pred
         self.hits[self.exit_idx] = hits
         if self.conf.shrink and hits.sum().item():
-            no_hits = torch.logical_not(hits)
+            miss = torch.logical_not(hits)
             hit_idxs = current_idxs[hits]
-            current_idxs = current_idxs[no_hits]
-            out = out[no_hits]
+            current_idxs = current_idxs[miss]
+            out = out[miss]
             self.ret[hit_idxs] = cache_pred[hits]
             self.item_exits[hit_idxs] = torch.ones(
                 hit_idxs.size(0)).to(self.conf.device) * self.exit_idx

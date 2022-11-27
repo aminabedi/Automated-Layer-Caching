@@ -40,3 +40,6 @@ python optimizer.py \
     --log_dir "log" \
     --tensorboardx_logdir "mv-hrnet" \
     2>&1 | tee log/log.log
+
+    خلع سلاح همسر خود شیفته
+    ترجمه دکتر حمید پور

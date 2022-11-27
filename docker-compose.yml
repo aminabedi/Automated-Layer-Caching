@@ -1,16 +1,29 @@
 version: '3.5'
 services:
-  torchserve:
+  # torchserve:
+  #   build: 
+  #     dockerfile: Dockerfile_serve
+  #     context: .
+  #     args:
+  #       MODEL_NAME: cifar10-resnet50
+  #       MODEL_FILE: backbone/cifar10/resnet.py
+  #       MODEL_WEIGHTS: models/cifar10/resnet50.pt
+  #       CONFIG_FILE: backbone/cifar10/config.yaml
+  #       EXTRA_FILES: backbone/cifar10/aux.py
+  #   ports:
+  #    - "0.0.0.0:8080:8080"
+  #    - "0.0.0.0:8081:8081"
+  #   volumes:
+  #    - ./data_store:/app/data
+  trainer:
     build: 
+      dockerfile: Dockerfile_train
       context: .
-      args:
-        MODEL_NAME: cifar10-resnet50
-        MODEL_FILE: backbone/cifar10/resnet.py
-        MODEL_WEIGHTS: models/cifar10/resnet50.pt
-        CONFIG_FILE: backbone/cifar10/config.yaml
-        EXTRA_FILES: backbone/cifar10/aux.py
-    ports:
-     - "0.0.0.0:8080:8080"
-     - "0.0.0.0:8081:8081"
-    # volumes:
-    #  - ./app:/app
+    environment:
+      MODEL_NAME: cifar10-resnet50
+      MODEL_FILE: backbone/cifar10/resnet.py
+      MODEL_WEIGHTS: models/cifar10/resnet50.pt
+      CONFIG_FILE: backbone/cifar10/config.yaml
+      EXTRA_FILES: backbone/cifar10/aux.py
+    volumes:
+     - ./data_store:/app/data
