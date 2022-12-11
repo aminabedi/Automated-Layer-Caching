@@ -12,7 +12,7 @@ sys.path.append('../../')
 from classifier.Dense2Layer import Dense2Layer, Dense2LayerSoftmax, Dense2LayerTemp, DenseEmbed
 from classifier.ConvDense import ConvDense, Conv2Dense
 from classifier.attention import Attention
-from classifier.NConvMDense import NConvMDense
+from backbone.NConvMDense import NConvMDense
 
 class ClassifierFactory:
     """Factory to produce classifier according the classifier_conf.yaml.

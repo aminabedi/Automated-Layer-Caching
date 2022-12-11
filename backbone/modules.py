@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import confuse
-from NConvMDense import NConvMDense
+from .NConvMDense import NConvMDense
 from typing import List, Tuple
 
 
@@ -41,10 +41,7 @@ def threshold_confidence(x, threshold): #[0.1, 0.2, ..., 0.9]
     mx, _ = torch.max(x_exp, dim=1)
     return torch.gt(mx, threshold), mx
 
-# [0.1, 0.1, 0.1, 0.1, 0.6] => 0.6, 5
-# [0.2, 0.3, 0.4, 0.05, 0.05]=> 0.4
-#
-#
+
 class CacheControl():
     def __init__(self, exits: dict, cache_models: nn.ModuleList, logger=None):
         self.build_conf()
