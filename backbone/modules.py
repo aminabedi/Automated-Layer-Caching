@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 class Config:
     def __init__(self, name="UnnamedConfig", config_file="config.yaml"):
+        print("I'm Called!")
         self.reader = confuse.Configuration(name)
         self.reader.set_file(config_file)
 
@@ -59,6 +60,7 @@ class CacheControl():
             "shrink": self.conf.reader["inference"]["shrink"].get(bool)
         }
         self.conf.update(d)
+        print(self.conf)
 
     def batch_received(self, batch: torch.Tensor):
         self.ret = torch.ones((batch.shape[0], self.conf.num_classes)).to(
@@ -88,7 +90,9 @@ class CacheControl():
                 self.hits[self.exit_idx] = torch.ones(
                     out.size(0)).to(self.conf.device)
             return out
+        print("Here:", self.cache_models[self.exit_idx])
         cache_pred = self.cache_models[self.exit_idx](out)
+        print("->:", cache_pred)
         hits, mx = threshold_confidence(
             cache_pred, self.exits[layer_id]["threshold"])
         if self.logger:
