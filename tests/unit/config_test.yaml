@@ -1,0 +1,60 @@
+pre_evaluate_backbone: true 
+experiment: "Cifar10-Resnet50"
+trial: "trial" 
+num_classes: 10 
+inference: 
+  shrink: true
+  device: "cpu" 
+  respond_cache_control: true
+  cache_enabled: true
+training:
+  is_training: False
+  epochs: 10
+  device: "cpu" 
+  lr: 0.1 
+  step: "10, 13, 16" 
+  print_freq: 200 
+  save_freq: 3000 
+  batch_size: 32
+  momentum: 0.9 
+exits:
+  3:
+    weights_file: null
+    threshold: 0.5
+    architecture:
+      convs:
+        - out_ch: 64
+          k: 3
+          s: 1
+      linears:
+        - out: 10
+  4:
+    weights_file: null
+    threshold: 0.5
+    architecture:
+      convs:
+        - out_ch: 64
+          k: 3
+          s: 1
+      linears:
+        - out: 10
+  5:
+    weights_file: null
+    threshold: 0.5
+    architecture:
+      convs:
+        - out_ch: 64
+          k: 3
+          s: 1
+      linears:
+        - out: 10
+  6:
+    weights_file: null
+    threshold: 0.5
+    architecture:
+      convs:
+        - out_ch: 64
+          k: 3
+          s: 1
+      linears:
+        - out: 10
